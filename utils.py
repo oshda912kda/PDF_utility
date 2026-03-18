@@ -25,6 +25,12 @@ def extract_pages_from_pdf(pdf_path, start_page, end_page, folder, output_file_n
         new_pdf.pages.append(pdf.pages[i])
     new_pdf.save(os.path.join(folder, output_file_name + ".pdf"))
 
+def extract_each_page_from_pdf(pdf_path, folder, output_file_name):
+    pdf = Pdf.open(pdf_path)
+    for i, page in enumerate(pdf.pages):
+        new_pdf = Pdf.new()
+        new_pdf.pages.append(page)
+        new_pdf.save(os.path.join(folder, output_file_name + f"_{i+1}" + ".pdf"))
 
 def lock_pdf(pdf_path, password, folder):
     pdf_file = Pdf.open(pdf_path)
