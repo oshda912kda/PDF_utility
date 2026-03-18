@@ -4,7 +4,7 @@ import customtkinter
 from customtkinter import CTkLabel, CTkButton, CTkEntry, CTkRadioButton, CTkFrame, CTkImage, CTkFont, CTkOptionMenu
 from tkinter import Listbox, messagebox, IntVar, NORMAL, DISABLED, END, CENTER
 import tkinter.filedialog as fd
-from utils import merge_pdfs, get_num_pages, extract_pages_from_pdf, extract_page_from_pdf, lock_pdf
+from utils import merge_pdfs, get_num_pages, extract_each_page_from_pdf, extract_pages_from_pdf, extract_page_from_pdf, lock_pdf
 import ntpath
 
 
@@ -142,18 +142,24 @@ class App(customtkinter.CTk):
                                    validatecommand=(self.extract_frame.register(self.only_numbers), '%S'),
                                    justify=CENTER, state=DISABLED)
         self.end_number.grid(row=3, column=3, padx=(2, 10), )
+        
+        # Extract all pages Radiobutton
+        self.three = CTkRadioButton(self.extract_frame, variable=self.var, value=3,
+                                    command=self.radio_button_handler, text="extract each page")
+        self.three.grid(row=4, column=0, columnspan=2, pady=(10, 10))
+        
         self.label = CTkLabel(self.extract_frame, text="Output file name")
-        self.label.grid(row=4, column=0, columnspan=2, pady=(10, 10))
+        self.label.grid(row=5, column=0, columnspan=2, pady=(10, 10))
         self.output_extract = CTkEntry(self.extract_frame, justify=CENTER, state=DISABLED)
-        self.output_extract.grid(row=4, column=2, columnspan=2, pady=(10, 10))
+        self.output_extract.grid(row=5, column=2, columnspan=2, pady=(10, 10))
         self.button_extract = CTkButton(self.extract_frame, text="extract", image=self.extract_button_image,
                                         command=self.extract_handler,
                                         state=DISABLED)
-        self.button_extract.grid(row=5, column=2, columnspan=2, )
+        self.button_extract.grid(row=6, column=2, columnspan=2, )
         self.button_remove_extract = CTkButton(self.extract_frame, text="Remove", image=self.remove_image,
                                                command=self.remove_handler,
                                                state=DISABLED)
-        self.button_remove_extract.grid(row=6, column=2, columnspan=2, pady=(10, 10))
+        self.button_remove_extract.grid(row=7, column=2, columnspan=2, pady=(10, 10))
 
         # create lock Frame
         self.lock_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
@@ -217,7 +223,15 @@ class App(customtkinter.CTk):
             self.page_number.configure(state=DISABLED)
             self.start_number.configure(state=NORMAL)
             self.end_number.configure(state=NORMAL)
-
+        
+        if self.var.get() == 3:
+            self.page_number.delete(0, 'end')
+            self.start_number.delete(0, END)
+            self.end_number.delete(0, END)
+            self.page_number.configure(state=DISABLED)
+            self.start_number.configure(state=DISABLED)
+            self.end_number.configure(state=DISABLED)
+            
     def upload_handler(self):
         """
         handles uploaded pdf files
@@ -301,7 +315,7 @@ class App(customtkinter.CTk):
                 self.output_extract.delete(0, END)
                 self.page_number.delete(0, END)
                 messagebox.showinfo("INFO", "page extracted successfully", icon='info')
-        else:
+        elif self.var.get() == 2:
             try:
                 page_num_start = int(self.start_number.get())
                 page_num_end = int(self.end_number.get())
@@ -321,7 +335,14 @@ class App(customtkinter.CTk):
             self.end_number.delete(0, END)
             self.switch(self.output_extract)
             messagebox.showinfo("INFO", "page extracted successfully", icon='info')
-
+        else:
+            folder_selected = fd.askdirectory()
+            if folder_selected == "":
+                return
+            extract_each_page_from_pdf(self.path_extract, folder_selected, self.output_extract.get())
+            self.output_extract.delete(0, END)
+            messagebox.showinfo("INFO", "pages extracted successfully", icon='info')
+            
     def lock_handler(self):
         """
         handles locking a pdf file with a password
